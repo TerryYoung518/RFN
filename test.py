@@ -155,7 +155,7 @@ if args.test:
                 """
                 if args.dataset in ["MPSC",'MSRA-TD500','ICDAR2017MLT','USTB-SV1K']:
                     for label in gt_anno:
-                        _x0, _y0, _x1, _y1, _x2, _y2, _x3, _y3,txt = label.split(",")[:10]
+                        _x0, _y0, _x1, _y1, _x2, _y2, _x3, _y3,txt = label.split(",")[:9]
                         color = (0, 255, 0)
                         if "###" in txt:
                             color = (0, 255, 255)
