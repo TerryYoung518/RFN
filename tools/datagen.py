@@ -62,6 +62,8 @@ class ListDataset(data.Dataset):
             self.get_S_MSC2020()
         if "USTB-SV1K" in dataset:
             self.get_SV1K()
+        else:
+            self.get_YoloDataType()
 
     def __getitem__(self, idx):
         '''Load image.
@@ -187,6 +189,74 @@ class ListDataset(data.Dataset):
             self.fnames.append(img_file)
             self.boxes.append(np.array(_quad, dtype=np.float32))
             self.labels.append(np.array(_classes))
+
+    def get_YoloDataType(self):
+        jpg_dir = os.path.join(self.root, 'jpg/')
+        label_dir = os.path.join(self.root, 'label/')
+        classes_file = os.path.join(self.root, 'label/classes.txt')
+
+        # 检查目录或文件是否存在
+        if not os.path.exists(jpg_dir):
+            raise FileNotFoundError(f"Directory not found: {jpg_dir}")
+
+        if not os.path.exists(label_dir):
+            raise FileNotFoundError(f"Directory not found: {label_dir}")
+
+        if not os.path.exists(classes_file):
+            raise FileNotFoundError(f"File not found: {classes_file}")
+
+        classes = []
+        with open(classes_file, 'r') as file:
+            for line in file:
+                line = line.strip()  # 去除行末的换行符和空格
+                if line:  # 检查是否为空行
+                    classes.append(line)
+
+        jpg_files = []
+        for file in os.listdir(jpg_dir):
+            if file.endswith(".jpg"):
+                jpg_files.append(file)
+
+        label_files = [file_name.replace('.jpg', '.txt') for file_name in jpg_files]
+        dataset_size = len(jpg_files)
+
+        for i in range(dataset_size):
+            img_file = os.path.join(jpg_dir, jpg_files[i])
+            label_file = os.path.join(label_dir, label_files[i])
+            img = cv2.imread(img_file)
+            height, width, _ = img.shape
+
+            label_lines = open(label_file, 'r').readlines()
+
+            _quad = []
+            _classes = []
+
+            for line in label_lines:
+                line = line.strip()
+                if not line:
+                    continue
+
+                label_index, cx, cy, w, h = line.split(" ")[:5]
+
+                if label_index == 1: continue
+
+                _x0 = math.floor((2 * cx - w) * width)
+                _y0 = math.floor((2 * cy - h) * height)
+                _x1 = math.floor((2 * cx + w) * width)
+                _y1 = math.floor((2 * cy - h) * height)
+                _x2 = math.floor((2 * cx - w) * width)
+                _y2 = math.floor((2 * cy + h) * height)
+                _x3 = math.floor((2 * cx + w) * width)
+                _y3 = math.floor((2 * cy + h) * height)
+
+                _quad.append([_x0, _y0, _x1, _y1, _x2, _y2, _x3, _y3])
+                _classes.append(1 + label_index) # 0 - target_ball  1 - target
+
+            self.fnames.append(img_file)
+            self.boxes.append(np.array(_quad, dtype=np.float32))
+            self.labels.append(np.array(_classes))
+
+
     def get_S_MSC2020(self):
         #root='/home/amax/GTK/SynthText-python3/results/gen_pictures/'
         data_dir = self.root
@@ -554,3 +624,10 @@ def test2():
         img.save('/home/beom/samba/%d.jpg' % i)
 '''
 
+if (__name__ == "__main__"):
+    dataset = ListDataset(root='D:/数据集/targets_yolo_202401',
+                          dataset='SynthText', train=True, transform=Augmentation_traininig, input_size=600,
+                          multi_scale=True)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8, shuffle=False, num_workers=1,
+                                             collate_fn=dataset.collate_fn)
