@@ -1,0 +1,12 @@
+.idea
+.idea/deployment.xml
+rotation
+build
+!data/MPSC/*.zip
+data/MPSC/*
+dist
+eval_dir
+maskrcnn_benchmark.egg-info
+RRPN.egg-info
+weights/*
+!weights/README.md
