@@ -191,6 +191,8 @@ class ListDataset(data.Dataset):
             self.labels.append(np.array(_classes))
 
     def get_YoloDataType(self):
+        import math
+        from PIL import Image
         jpg_dir = os.path.join(self.root, 'jpg/')
         label_dir = os.path.join(self.root, 'label/')
         classes_file = os.path.join(self.root, 'label/classes.txt')
@@ -223,8 +225,10 @@ class ListDataset(data.Dataset):
         for i in range(dataset_size):
             img_file = os.path.join(jpg_dir, jpg_files[i])
             label_file = os.path.join(label_dir, label_files[i])
-            img = cv2.imread(img_file)
-            height, width, _ = img.shape
+            #img = cv2.imread(img_file)
+            #height, width, _ = img.shape
+            img = Image.open(img_file)
+            width, height = img.size
 
             label_lines = open(label_file, 'r').readlines()
 
@@ -236,7 +240,7 @@ class ListDataset(data.Dataset):
                 if not line:
                     continue
 
-                label_index, cx, cy, w, h = line.split(" ")[:5]
+                label_index, cx, cy, w, h = map(lambda x: int(x) if x == line.split(" ")[0] else float(x), line.split(" ")[:5])
 
                 if label_index == 1: continue
 
@@ -625,9 +629,13 @@ def test2():
 '''
 
 if (__name__ == "__main__"):
-    dataset = ListDataset(root='D:/数据集/targets_yolo_202401',
-                          dataset='SynthText', train=True, transform=Augmentation_traininig, input_size=600,
+    sys.path.append(os.getcwd() + '/tools/')
+    from augmentations import Augmentation_traininig
+    dataset = ListDataset(root='../data/TARGETS',
+                          dataset='yolo', train=True, transform=Augmentation_traininig, input_size=600,
                           multi_scale=True)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=8, shuffle=False, num_workers=1,
                                              collate_fn=dataset.collate_fn)
+
+    x = input()
