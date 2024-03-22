@@ -4,6 +4,7 @@ rotation
 build
 !data/MPSC/*.zip
 data/MPSC/*
+data/TARGETS/*
 dist
 eval_dir
 maskrcnn_benchmark.egg-info
